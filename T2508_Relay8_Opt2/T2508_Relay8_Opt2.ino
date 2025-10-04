@@ -12,7 +12,7 @@ void setup() {
 
 
     atask_initialize();
-    atask_add_new(&debug_print_handle);
+    //atask_add_new(&debug_print_handle);
     io_initialize();
     opto_initialize();
 

@@ -9,6 +9,7 @@
 
 
 #include "Arduino.h"
+#include "main.h"
 #include "io.h"
 #include "opto.h"
 #include "atask.h"
@@ -18,8 +19,8 @@
 
 opto_st  opto[NBR_OF_OPTO] = 
 {
-    {INP_PIN_OPT_1, 0, 0, 0, 0},
-    {INP_PIN_OPT_2, 0, 0, 0, 0}
+    {1,INP_PIN_OPT_1, 0, 0, 0, 0, 0},
+    {2,INP_PIN_OPT_2, 0, 0, 0, 0, 0}
 };
 
 typedef struct
@@ -37,7 +38,25 @@ opto_ctrl_st opto_ctrl = {0, false, 0};
 void opto_initialize(void)
 {
     atask_add_new(&opto_handle);
+    for (uint8_t i = 0; i < NBR_OF_OPTO; i++) {
+        opto[i].next_update = UPDATE_INTERVAL + (i *4000);
+    }
 }
+
+
+void opto_send_state_msg(opto_st *optop)
+{
+    Serial.print("<R1");
+    Serial.print(MAIN_UNIT_INDEX);
+    Serial.print('O');
+    Serial.print(optop->index);
+    Serial.print(':');
+    if(optop->status == LOW) Serial.print('H');
+    else Serial.print('L');
+    Serial.println(">");
+    optop->next_update = millis() + UPDATE_INTERVAL;
+}
+
 
 void opto_manage(opto_st *optop)
 {
@@ -50,7 +69,8 @@ void opto_manage(opto_st *optop)
             if(optop->status == LOW) 
             {
                 optop->prev_status = optop->status;
-                Serial.println("<R1O1:H>");
+                opto_send_state_msg(optop);
+                //Serial.println("<R1O1:H>");
                 relay_on(0);
                 opto_ctrl.radiated = true;
                 optop->timeout = millis() + 1000;
@@ -63,7 +83,8 @@ void opto_manage(opto_st *optop)
         case 30:
             if(optop->status == HIGH) 
             {
-                Serial.println("<R1O1:L>");
+                opto_send_state_msg(optop);
+                //Serial.println("<R1O1:L>");
                 relay_off(0);
                 opto_ctrl.radiated = true;
                 optop->state = 40;
@@ -74,6 +95,7 @@ void opto_manage(opto_st *optop)
             break;
 
     }
+    if (millis() > optop->next_update) opto_send_state_msg(optop);
 }
 
 void opto_task(void)
