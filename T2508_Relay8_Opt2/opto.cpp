@@ -46,7 +46,7 @@ void opto_initialize(void)
 
 void opto_send_state_msg(opto_st *optop)
 {
-    Serial.print("<R1");
+    Serial.print("<R");
     Serial.print(MAIN_UNIT_INDEX);
     Serial.print('O');
     Serial.print(optop->index);
@@ -111,7 +111,7 @@ void opto_task(void)
             opto_manage(&opto[opto_ctrl.indx]);
             if (opto_ctrl.radiated) 
             {
-                opto_ctrl.timeout = millis() + 10000;
+                opto_ctrl.timeout = millis() + 5000;
                 opto_handle.state = 20;
             }
             else opto_handle.state = 50;
@@ -126,7 +126,13 @@ void opto_task(void)
         case 50:
             opto_ctrl.indx++;
             if(opto_ctrl.indx >= NBR_OF_OPTO) opto_ctrl.indx=0;
-            opto_handle.state = 10;
+            opto_ctrl.timeout = millis() + 5000;
+            opto_handle.state = 60;
+            break;
+        case 60:
+            if (millis() > opto_ctrl.timeout){
+                opto_handle.state = 10;
+            }
             break;
         default:
             Serial.println(F("Lost case in opto_task!!"));
