@@ -111,7 +111,7 @@ void opto_task(void)
             opto_manage(&opto[opto_ctrl.indx]);
             if (opto_ctrl.radiated) 
             {
-                opto_ctrl.timeout = millis() + 5000;
+                opto_ctrl.timeout = millis() + 2000;
                 opto_handle.state = 20;
             }
             else opto_handle.state = 50;
