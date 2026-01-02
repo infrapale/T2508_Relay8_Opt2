@@ -1,6 +1,7 @@
 #include "atask.h"
 #include "io.h"
 #include "opto.h"
+#include "uart.h"
 
 void debug_print_task(void);
 
@@ -15,6 +16,7 @@ void setup() {
     //atask_add_new(&debug_print_handle);
     io_initialize();
     opto_initialize();
+    uart_initialize();
 
 
 }
