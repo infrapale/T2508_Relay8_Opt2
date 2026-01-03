@@ -1,6 +1,7 @@
 #include "main.h"
 #include "uart.h"
 #include "opto.h"
+#include "relay.h"
 #include "atask.h"
 
 typedef struct
@@ -91,15 +92,52 @@ void uart_print_decoded(uart_msg_st *decod)
     Serial.println();
 }
 
+uart_reply_opto_state(uart_msg_st *decod)
+{
+    uart_ctrl.tx_decoded.to_tag = decod->from_tag;
+    uart_ctrl.tx_decoded.to_addr = decod->from_addr;
+    uart_ctrl.tx_decoded.from_tag = decod->to_tag;
+    uart_ctrl.tx_decoded.from_addr = decod->to_addr;
+    uart_ctrl.tx_decoded.function = decod->function;
+    uart_ctrl.tx_decoded.func_indx = decod->func_indx;
+    uart_ctrl.tx_decoded.action = ACTION_REPLY;
+    uart_ctrl.tx_decoded.value = '3';
+    uart_build_decoded_msg(uart_ctrl.tx_buff, &uart_ctrl.tx_decoded);
+    Serial.println(uart_ctrl.tx_buff);   
+}
+
+void uart_action_set_relay(uart_msg_st *decod)
+{
+    uint8_t rindx = decod->func_indx - '1';
+    if (rindx < 8) {
+        if (decod->action == ACTION_SET) {
+            switch(decod->value )
+            {
+                case '0':
+                    relay_off(rindx);
+                    break;
+                case '1':
+                    relay_on(rindx);
+                    break;
+                case 'T':
+                    relay_toggle(rindx);
+                    break;
+            }
+        }
+    }
+    relay_debug_print();
+
+}
+
 void uart_rx_action(uart_msg_st *decod)
 {
     switch(decod->function)
     {
         case 'O':
-            if(decod->func_indx == '*') uart_reply_opto_state();
+            if(decod->func_indx == '*') uart_reply_opto_state(decod);
             break;
         case 'S': // Set relay
-            if(decod->action == '=') uart_set_relay(decod->func_indx, decod->value);
+            uart_action_set_relay(decod);
             break;
     }
 }
@@ -118,7 +156,9 @@ void uart_rx_task(void)
         case 20:
             if (uart_get_decode_msg(uart_ctrl.rx_buff, &uart_ctrl.rx_decoded))
             {
+                Serial.print("uart_rx_task, decoded: ");
                 uart_print_decoded( &uart_ctrl.rx_decoded);
+                uart_rx_action(&uart_ctrl.rx_decoded);
             }
             rx_handle.state = 10;
             break;
