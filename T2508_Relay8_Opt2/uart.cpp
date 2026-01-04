@@ -13,6 +13,8 @@ typedef struct
     uint8_t rx_len;
 } uart_ctrl_st;
 
+extern main_conf_st main_conf;
+
 void uart_rx_task(void);
 //atask_st rx_handle        = {"Opto Task      ", 100,0, 0, 255, 0, 1, opto_task};
 atask_st rx_handle          = {"UART Rx Task   ", 100,0, 0, 255, 0, 1, uart_rx_task};
@@ -74,7 +76,7 @@ bool uart_get_decode_msg(char *buff, uart_msg_st *decod)
         decod->value      = buff[8];
         frame_ok = true;
     }
-    if((decod->to_tag != UNIT_TAG) || (decod->to_addr != UNIT_ADDR))
+    if((decod->to_tag != main_conf.my_tag) || (decod->to_addr !=main_conf.my_addr))
         frame_ok = false;
     return frame_ok;
 }
@@ -94,6 +96,11 @@ void uart_print_decoded(uart_msg_st *decod)
 
 uart_reply_opto_state(uart_msg_st *decod)
 {
+    uint8_t opto_status = 0;
+    for(uint8_t i=0; i< NBR_OF_OPTO; i++){
+       opto_status |= (opto_get_inp_event(i) << i);
+    }
+
     uart_ctrl.tx_decoded.to_tag = decod->from_tag;
     uart_ctrl.tx_decoded.to_addr = decod->from_addr;
     uart_ctrl.tx_decoded.from_tag = decod->to_tag;
@@ -101,7 +108,7 @@ uart_reply_opto_state(uart_msg_st *decod)
     uart_ctrl.tx_decoded.function = decod->function;
     uart_ctrl.tx_decoded.func_indx = decod->func_indx;
     uart_ctrl.tx_decoded.action = ACTION_REPLY;
-    uart_ctrl.tx_decoded.value = '3';
+    uart_ctrl.tx_decoded.value = opto_status + '0';
     uart_build_decoded_msg(uart_ctrl.tx_buff, &uart_ctrl.tx_decoded);
     Serial.println(uart_ctrl.tx_buff);   
 }
@@ -154,10 +161,11 @@ void uart_rx_task(void)
             if(uart_ctrl.rx_len > 8) rx_handle.state = 20;
             break;
         case 20:
+            main_conf.clr_watchdog = true;
             if (uart_get_decode_msg(uart_ctrl.rx_buff, &uart_ctrl.rx_decoded))
             {
-                Serial.print("uart_rx_task, decoded: ");
-                uart_print_decoded( &uart_ctrl.rx_decoded);
+                // Serial.print("uart_rx_task, decoded: ");
+                // uart_print_decoded( &uart_ctrl.rx_decoded);
                 uart_rx_action(&uart_ctrl.rx_decoded);
             }
             rx_handle.state = 10;

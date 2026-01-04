@@ -8,7 +8,7 @@ typedef struct
     uint8_t     index;
     uint8_t     pin;
     uint8_t     status;
-    uint8_t     prev_status;
+    uint8_t     event;
     uint16_t    state;
     uint32_t    timeout;
     uint32_t    next_update;
@@ -16,4 +16,5 @@ typedef struct
 
 void opto_initialize(void);
 
+uint8_t opto_get_inp_event(uint8_t oindx);
 #endif

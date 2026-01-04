@@ -1,11 +1,11 @@
 #ifndef __IO_H__
 #define __IO_H__
-
+#include "Arduino.h"
 
 #define NBR_OF_DIP_SW   2
 
-#define INP_PIN_DIP_SW_1  A7
-#define INP_PIN_DIP_SW_2  A6
+#define INP_PIN_DIP_SW_1  21
+#define INP_PIN_DIP_SW_2  20
 
 #define INP_PIN_OPT_1   5u
 #define INP_PIN_OPT_2   4u
@@ -22,5 +22,7 @@
 void io_initialize(void);
 
 void io_print_all(void);
+
+uint8_t io_get_dip_sw(uint8_t sw);
 
 #endif
