@@ -21,8 +21,8 @@ void io_initialize(void)
         digitalWrite(relay[i].pin, LOW);
     } 
     
-    pinMode(INP_PIN_DIP_SW_1, INPUT);
-    pinMode(INP_PIN_DIP_SW_2, INPUT);
+    pinMode(INP_PIN_DIP_SW_1, INPUT_PULLUP);
+    pinMode(INP_PIN_DIP_SW_2, INPUT_PULLUP);
 
     if(analogRead(INP_PIN_DIP_SW_1) < 512) main_conf.my_addr = '1';
     else main_conf.my_addr = '0';

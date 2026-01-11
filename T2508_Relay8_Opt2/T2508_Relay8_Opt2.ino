@@ -13,7 +13,7 @@ main_conf_st main_conf = {
     .clr_watchdog = true};
 
 atask_st debug_print_handle        = {"Debug Print    ", 5000,0, 0, 255, 0, 1, debug_print_task};
-AVR_Watchdog watchdog(6);
+AVR_Watchdog watchdog(3600);
 
 void setup() {
     delay(2000);
